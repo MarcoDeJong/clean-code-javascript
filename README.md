@@ -19,13 +19,13 @@
 ![[Humoristische afbeelding vergelijkt 'goede code' en 'slechte code', gemeten door het aantal keer dat 'WTF' wordt gezegd tijdens een code review](#)
 ](https://www.osnews.com/images/comics/wtfm.jpg)
 
-Softwareontwikkelingsprincipes geïnspireerd door Robert C. Martin's boek [_Clean Code_](https://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882), echter toegespitst op JavaScript. Dit document is niet zozeer een stijlgids, maar meer een handleiding voor het schrijven van duidelijke, herbruikbare en makkelijk aan te passen JavaScript-code.
+Softwareontwikkelingsprincipes geïnspireerd door Robert C. Martin's boek [_Clean Code_](https://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882), echter toegespitst op JavaScript. Dit document dient niet zozeer als een stijlgids, maar meer als een handleiding voor het schrijven van heldere, herbruikbare en eenvoudig aan te passen JavaScript-code.
 
 Het is niet nodig om elk principe rigide te volgen; niet iedereen zal het overal mee eens zijn. Beschouw deze als handvatten, gebaseerd op jarenlange ervaring van de _Clean Code_-auteurs.
 
 Onze expertise in softwareontwikkeling is pas een halve eeuw oud en we blijven constant leren. Misschien dat we, als onze discipline even oud is als de bouwkunst, striktere regels hebben. Tot die tijd kunnen deze richtlijnen je helpen de kwaliteit van je JavaScript-code te peilen.
 
-En onthoud: alleen door deze principes te kennen, word je niet direct een betere ontwikkelaar. En zelfs na jaren ervaring kun je nog steeds fouten maken. Elk codefragment begint als een ruwe schets, die vorm krijgt en verfijnd wordt, vooral na feedback van collega's. Wees dus niet te hard voor jezelf als je code nog niet perfect is; het is de code die verbeterd kan worden, niet jij.
+Onthoud echter dat je niet direct een betere ontwikkelaar wordt, door enkel deze principes te kennen. En zelfs na jaren ervaring kun je nog steeds fouten maken. Elk codefragment begint als een ruwe schets, die vorm krijgt en verfijnd wordt, vooral na feedback van collega's. Wees dus niet te hard voor jezelf als je code nog niet perfect is; het is de code die verbeterd kan worden, niet jij.
 
 ## **Variabelen**
 
@@ -58,7 +58,9 @@ getCustomerRecord();
 **Juist:**
 
 ```javascript
-getUser();
+getUserDetails();
+getUserData();
+getUserRecord();
 ```
 
 **[⬆ naar boven](#inhoudsopgave)**
@@ -79,7 +81,7 @@ setTimeout(blastOff, 86400000);
 **Juist:**
 
 ```javascript
-// Declareer ze als benoemde constanten, in hoofdletters
+// Declareer ze als benoemde constanten, in hoofdletters, om duidelijk te maken dat dit onveranderlijke waarden zijn
 const MILLISECONDS_PER_DAY = 60 * 60 * 24 * 1000; //86400000;
 
 setTimeout(blastOff, MILLISECONDS_PER_DAY);
@@ -105,6 +107,7 @@ saveCityZipCode(
 ```javascript
 const address = "One Infinite Loop, Cupertino 95014";
 const cityZipCodeRegex = /^[^,\\]+[,\\\s]+(.+?)\s*(\d{5})?$/;
+// Gebruik destructuring met een placeholder (_) voor ongebruikte waarden, om duidelijk de stad en postcode uit het adres te halen
 const [_, city, zipCode] = address.match(cityZipCodeRegex) || [];
 saveCityZipCode(city, zipCode);
 ```
@@ -140,6 +143,7 @@ locations.forEach(location => {
   // ...
   // ...
   // ...
+  // Nu is het duidelijk dat `location` de huidige locatie in de iteratie vertegenwoordigt.
   dispatch(location);
 });
 ```
@@ -302,12 +306,12 @@ addToDate(date, 1);
 **Juist:**
 
 ```javascript
-function addMonthToDate(month, date) {
+function addMonthToDate(date, month) {
   // ...
 }
 
 const date = new Date();
-addMonthToDate(1, date);
+addMonthToDate(date, 1);
 ```
 
 **[⬆ naar boven](#inhoudsopgave)**
@@ -510,6 +514,32 @@ function createMenu(config) {
 createMenu(menuConfig);
 ```
 
+**Juist (BONUS ES6):**
+
+```javascript
+const menuConfig = {
+  title: "Order",
+  // User did not include 'body' key
+  buttonText: "Send",
+  cancellable: true
+};
+
+function createMenu(config) {
+  const defaultConfig = {
+    title: "Foo",
+    body: "Bar",
+    buttonText: "Baz",
+    cancellable: true
+  };
+  let finalConfig = {...defaultConfig, ...config};
+  return finalConfig;
+  // config now equals: {title: "Order", body: "Bar", buttonText: "Send", cancellable: true}
+  // ...
+}
+
+createMenu(menuConfig);
+```
+
 **[⬆ naar boven](#inhoudsopgave)**
 
 ### Vermijd het gebruik van vlaggen in functies
@@ -597,8 +627,8 @@ Er zijn twee belangrijke punten om op te merken bij deze aanpak:
 1. Er kunnen gevallen zijn waarin je daadwerkelijk de invoer van het object wilt
    wijzigen, maar wanneer je deze programmeerpraktijk volgt, zul je merken dat die gevallen vrij zeldzaam zijn. De meeste dingen kunnen worden herschreven om geen onverwachte gevolgen te hebben!
 
-2. Het maken van kopieën van grote objecten kan in termen van prestaties duur zijn.
-   Gelukkig is dit in de praktijk meestal geen groot probleem omdat er uitstekende [bibliotheken](https://facebook.github.io/immutable-js/) zijn die deze aanpak minder geheugenintensief maken dan wanneer je handmatig objecten en arrays zou klonen.
+2. Het klonen van grote objecten of arrays kan prestatieproblemen veroorzaken. Gelukkig is dit in de praktijk meestal
+   geen groot probleem omdat er uitstekende [bibliotheken](https://facebook.github.io/immutable-js/) zijn die deze aanpak minder geheugenintensief maken dan wanneer je handmatig objecten en arrays zou klonen.
 
 **Onjuist:**
 
@@ -734,6 +764,8 @@ if (shouldShowSpinner(fsmInstance, listNodeInstance)) {
 
 ### Voorkom negatieve voorwaarden
 
+Het gebruiken van negatieve voorwaarden in de namen van functies kan het wat lastiger maken om je code te begrijpen. Wanneer je zoiets tegenkomt, moet je eigenlijk twee keer nadenken (een soort van dubbele ontkenning) en dat maakt het lezen van de code gewoon moeilijker. Het is een stuk fijner als de namen van functies en voorwaarden op een duidelijke, positieve manier worden opgesteld.
+
 **Onjuist:**
 
 ```javascript
@@ -762,7 +794,7 @@ if (isDOMNodePresent(node)) {
 
 ### Vermijd voorwaarden
 
-Dit klinkt misschien als een onmogelijke opgave. De meeste mensen denken bij het horen hiervan meteen: "Hoe kan ik iets doen zonder een `if`?" Het antwoord is dat je in veel gevallen polymorfisme kunt gebruiken om dezelfde taak uit te voeren. De volgende vraag is meestal: "Waarom zou ik dat willen doen?" Het antwoord heeft te maken met een eerder principe dat we hebben beschreven: een functie moet slechts één ding doen. Wanneer je klassen en functies hebt met `if`-verklaringen, geef je aan je gebruiker aan dat je functie meer dan één ding probeert te doen. Onthoud, focus gewoon op één ding.
+Dit klinkt misschien als een onmogelijke opgave. De meeste mensen denken bij het horen hiervan meteen: "Hoe kan ik iets doen zonder een `if`?" Het antwoord is dat je in veel gevallen polymorfisme kunt gebruiken om dezelfde taak uit te voeren. Polymorfisme stelt ons in staat om objecten van verschillende klassen te behandelen via een gemeenschappelijke interface, waardoor de noodzaak voor expliciete conditionele logica wordt verminderd. De volgende vraag is meestal: "Waarom zou ik dat willen doen?" Het antwoord heeft te maken met een eerder principe dat we hebben beschreven: een functie moet slechts één ding doen. Wanneer je klassen en functies hebt met `if`-verklaringen, geef je aan je gebruiker aan dat je functie meer dan één ding probeert te doen. Onthoud, focus gewoon op één ding.
 
 **Onjuist:**
 
@@ -813,9 +845,9 @@ class Cessna extends Airplane {
 
 **[⬆ naar boven](#inhoudsopgave)**
 
-### Voorkom het controleren van datatypen (deel 1)
+### Vermijd typecontroles (deel 1)
 
-JavaScript heeft ongecontroleerde datatypen, wat betekent dat je functies elk type argument kunnen accepteren. Soms word je verleid om type-controles in je functies te doen vanwege deze vrijheid. Er zijn echter veel manieren om dit te vermijden. Het eerste waar je aan moet denken is het gebruik van consistente API's.
+JavaScript heeft ongecontroleerde datatypen, wat betekent dat je functies elk type argument kunnen accepteren. Soms word je verleid om typecontroles in je functies te doen vanwege deze vrijheid. Er zijn echter veel manieren om dit te vermijden. Het eerste waar je aan moet denken is het gebruik van consistente API's.
 
 **Onjuist:**
 
@@ -839,9 +871,9 @@ function travelToTexas(vehicle) {
 
 **[⬆ naar boven](#inhoudsopgave)**
 
-### Voorkom het controleren van datatypen (deel 2)
+### Vermijd typecontroles (deel 2)
 
-Als je werkt met eenvoudige primitieve waarden zoals strings en integers, en je kunt geen polymorfisme gebruiken maar toch de behoefte voelt om typecontroles uit te voeren, overweeg dan om TypeScript te gebruiken. Het is eigenlijk een soort supercharged-versie van JavaScript waarmee je aangeeft wat voor soort gegevens je verwacht. Het probleem met handmatig typecontroles uitvoeren in normaal JavaScript is dat dit zoveel extra woorden vereist dat de nep-"type-veiligheid" die je krijgt, niet opweegt tegen de verloren leesbaarheid. Houd je JavaScript schoon, schrijf goede tests en voer goede code-reviews uit. Of doe dit allemaal, maar dan met TypeScript!
+Als je werkt met eenvoudige primitieve waarden zoals strings en integers, en je kunt geen polymorfisme gebruiken maar toch de behoefte voelt om typecontroles uit te voeren, overweeg dan om TypeScript te gebruiken. TypeScript biedt de mogelijkheid om expliciete typen te definiëren, wat helpt bij het vangen van typegerelateerde fouten tijdens de compile-time, in plaats van runtime. Het probleem met handmatig typecontroles uitvoeren in normaal JavaScript is dat dit zoveel extra woorden vereist dat de nep-"type-veiligheid" die je krijgt, niet opweegt tegen de verloren leesbaarheid. Houd je JavaScript schoon, schrijf goede tests en voer goede code-reviews uit. Of doe dit allemaal, maar dan met TypeScript!
 
 **Onjuist:**
 
@@ -870,8 +902,7 @@ function combine(val1, val2) {
 
 ### Vermijd Overmatige Optimalisatie
 
-Het is verleidelijk om je code tot in het kleinste detail te optimaliseren, maar in moderne browsers worden veel optimalisaties automatisch uitgevoerd. Het kan vaak een verspilling van tijd zijn om te proberen alles handmatig te optimaliseren. [Er zijn goede bronnen](https://github.com/petkaantonov/bluebird/wiki/Optimization-killers)
-beschikbaar, die je kunnen vertellen waar je nog moet optimaliseren. Richt je daar eerst op.
+Het is verleidelijk om je code tot in het kleinste detail te optimaliseren, maar in moderne browsers worden veel optimalisaties automatisch uitgevoerd. Het advies om overmatige optimalisatie te vermijden is gebaseerd op het principe van premature optimalisatie, waar Donald Knuth over zei: "Premature optimization is the root of all evil." Dit idee benadrukt dat het te vroeg optimaliseren van code, voordat duidelijk is waar de werkelijke prestatieknelpunten liggen, niet alleen tijdverspilling kan zijn, maar ook de code complexer en moeilijker te onderhouden kan maken. [Er zijn goede bronnen](https://github.com/petkaantonov/bluebird/wiki/Optimization-killers) beschikbaar, die je kunnen vertellen waar je nog moet optimaliseren. Richt je daar eerst op.
 
 **Onjuist:**
 
@@ -1022,6 +1053,30 @@ console.log(`Employee name: ${employee.getName()}`); // Employee name: John Doe
 delete employee.name;
 console.log(`Employee name: ${employee.getName()}`); // Employee name: John Doe
 ```
+
+Hoewel de techniek van het gebruik van closures voor het creëren van privéleden in objecten zeer nuttig is, zijn er met de introductie van ES6 (ECMAScript 2015) en latere versies meer formele middelen beschikbaar gekomen voor het definiëren van privé-eigenschappen en -methoden in klassen, zoals de # syntax voor privévelden.
+
+Hier is hoe je het zou kunnen doen met ES6+ klassen en privévelden:
+
+```javascript
+class Employee {
+  #name;
+
+  constructor(name) {
+    this.#name = name;
+  }
+
+  getName() {
+    return this.#name;
+  }
+}
+
+const employee = new Employee("John Doe");
+console.log(`Employee name: ${employee.getName()}`); // Employee name: John Doe
+// Directe toegang tot #name buiten de klasse is niet mogelijk, dus geen delete operatie mogelijk
+```
+
+Deze moderne aanpak biedt een duidelijke en gestandaardiseerde manier om privéleden in klassen te definiëren, terwijl de voordelen van closures behouden blijven, maar met een meer leesbare en onderhoudbare syntax. Het is echter belangrijk op te merken dat deze functie mogelijk niet in alle JavaScript-omgevingen wordt ondersteund zonder transpilatie (bijvoorbeeld via Babel), afhankelijk van het doelplatform van je project.
 
 **[⬆ naar boven](#inhoudsopgave)**
 
@@ -1251,7 +1306,7 @@ class Employee {
 
 ### Het principe van één verantwoordelijkheid (SRP)
 
-Het principe van één verantwoordelijkheid is het engels bekend als Single Responsibility Principle (SRP). In "Clean Code" staat: "Een klasse mag nooit meer dan één reden hebben om te veranderen". Het is verleidelijk om een klasse te vullen met veel verschillende taken, net zoals wanneer je maar één koffer mag meenemen op reis. Maar als je dit doet, wordt je klasse onsamenhangend en zal het vele redenen hebben om te veranderen. Het is belangrijk om het aantal keren dat je een klasse moet aanpassen te minimaliseren. Dit is van belang omdat als een klasse te veel verschillende taken heeft en je er één aanpast, het lastig kan zijn om te begrijpen hoe dat andere delen van je code beïnvloedt.
+Het principe van één verantwoordelijkheid is het Engels bekend als Single Responsibility Principle (SRP). In "Clean Code" staat: "Een klasse mag nooit meer dan één reden hebben om te veranderen". Het is verleidelijk om een klasse te vullen met veel verschillende taken, net zoals wanneer je maar één koffer mag meenemen op reis. Maar als je dit doet, wordt je klasse onsamenhangend en zal het vele redenen hebben om te veranderen. Het is belangrijk om het aantal keren dat je een klasse moet aanpassen te minimaliseren. Dit is van belang omdat als een klasse te veel verschillende taken heeft en je er één aanpast, het lastig kan zijn om te begrijpen hoe dat andere delen van je code beïnvloedt.
 
 **Onjuist:**
 
@@ -1304,7 +1359,7 @@ class UserSettings {
 
 ### Het Open/Gesloten Principe (OCP)
 
-Zoals Bertrand Meyer zegt: "Software entiteiten (klassen, modules, functies, enz.) moeten open zijn voor uitbreiding, maar gesloten voor aanpassing." Maar wat betekent dat eigenlijk? Dit principe stelt in feite dat je gebruikers moet toestaan nieuwe functionaliteiten toe te voegen zonder bestaande code te wijzigen.
+Het Open/Gesloten Principe (OCP) is een slimme manier om te zorgen dat je software kan groeien en veranderen zonder dat je elke keer alles opnieuw moet bouwen of aanpassen. Stel je voor dat je een LEGO-bouwwerk maakt. In plaats van dat je elke keer het hele bouwwerk uit elkaar haalt om een nieuw stukje toe te voegen, ontwerp je het zó dat je gemakkelijk nieuwe blokjes kunt toevoegen zonder de rest te verstoren. Zo werkt het Open/Gesloten Principe ook voor het ontwerpen van software. Je maakt je code op een manier dat je nieuwe dingen kunt toevoegen (dat is het "open" deel) zonder de bestaande code te hoeven veranderen (dat is het "gesloten" deel). Dit maakt je software flexibel en toekomstbestendig, waardoor je makkelijker kan inspelen op nieuwe eisen of technologieën zonder steeds vanaf nul te beginnen.
 
 **Onjuist:**
 
@@ -1501,9 +1556,11 @@ renderLargeShapes(shapes);
 
 ### Interface Segregation Principle (ISP)
 
-In JavaScript hebben we geen strikte interfaces, maar het idee blijft belangrijk. ISP zegt eigenlijk: "Klanten moeten niet afhankelijk zijn van interfaces die ze niet gebruiken." In JavaScript worden interfaces vaak impliciet gebruikt vanwege _duck-typing_.
+Het Interface Segregation Principle (ISP) benadrukt het belang van het scheiden van interfaces, zodat clients (gebruikers van de interface) niet afhankelijk worden gemaakt van interfaces die ze niet gebruiken. Dit principe draagt bij aan de flexibiliteit en onderhoudbaarheid van de code door te voorkomen dat onnodige afhankelijkheden de ontwikkeling vertragen of complexer maken.
 
-Een goed voorbeeld hiervan is bij klassen die grote instellingenobjecten vereisen. Het is handig om klanten niet te dwingen om enorme hoeveelheden opties op te geven, omdat ze die meestal toch niet allemaal nodig hebben. Optionele instellingen voorkomen een overvolle interface.
+In JavaScript zijn er geen strikte interfaces, maar het idee blijft belangrijk. ISP zegt eigenlijk: "Clients moeten niet afhankelijk zijn van interfaces die ze niet gebruiken." In JavaScript worden interfaces vaak impliciet gebruikt vanwege _duck-typing_.
+
+Een goed voorbeeld hiervan is bij klassen die grote instellingenobjecten vereisen. Het is handig om clients niet te dwingen om enorme hoeveelheden opties op te geven, omdat ze die meestal toch niet allemaal nodig hebben. Optionele instellingen voorkomen een overvolle interface.
 
 **Onjuist:**
 
@@ -1568,8 +1625,6 @@ const $ = new DOMTraverser({
 **[⬆ naar boven](#inhoudsopgave)**
 
 ### Het Principe van Dependency Inversion (DIP)
-
-This principle states two essential things:
 
 Dit principe draait om twee belangrijke zaken:
 
@@ -1724,7 +1779,7 @@ describe("MomentJS", () => {
 
 ### Gebruik Promises, geen callbacks
 
-`Callbacks` leveren geen schone code op, ze zorgen voor overmatige hoeveelheden geneste code. Vanaf ES2015/ES6 zijn `promises` een ingebouwd globaal type. Gebruik ze!
+Het gebruik van Promises in plaats van callbacks is een significante verbetering in het beheren van asynchrone operaties in JavaScript. Promises bieden een meer leesbare en gestructureerde benadering voor asynchrone flow controle, waardoor de zogenaamde _callback hell_ wordt voorkomen. Dit maakt je code niet alleen schoner, maar verbetert ook de foutafhandeling door het gebruik van `.then()` voor succesvolle operaties en `.catch()` voor fouten.
 
 **Onjuist:**
 
@@ -1817,15 +1872,17 @@ getCleanCodeArticle()
 
 ## **Foutafhandeling**
 
-Fouten die worden gegenereerd zijn eigenlijk een goed teken! Het betekent
-dat de runtime heeft ontdekt dat er iets mis is gegaan in je programma.
-Het laat je weten dat de huidige functie niet verder wordt uitgevoerd,
-het proces wordt beëindigd (in Node) en je een notificatie geeft in de 
-console met een _stack trace_
+Fouten zijn goed! Wanneer een fout optreedt, biedt dit een kans om te leren,
+te diagnosticeren, en uiteindelijk je code robuuster te maken. Wanneer een fout
+wordt gegenereerd, biedt dit essentiële feedback. Het onderbreken van de
+uitvoering en het genereren van een _stack trace_ zijn mechanismen die bedoeld
+zijn om ontwikkelaars te helpen de oorzaak van het probleem te identificeren.
+Door aandacht te besteden aan deze signalen, kun je de onderliggende oorzaken
+van problemen in je code adresseren.
 
 ### Negeer opgevangen fouten niet
 
-Als je een fout opvangt, en er vervolgens niets mee doet, heb je geen mogelijkheid om die fout ooit op te lossen of erop te reageren. Het simpelweg naar de console loggen (`console.log`) is ook niet erg effectief, omdat het vaak verloren gaat te midden van allerlei andere uitvoer op de console. Wanneer je een stuk code in een `try/catch`-blok plaatst, geef je eigenlijk aan dat je verwacht dat er mogelijk een fout kan optreden, en dus zou je een plan moeten hebben, of een procedure moeten volgen, voor het geval er inderdaad een fout optreedt.
+Het negeren van opgevangen fouten, of dit nu bewust of onbewust gebeurt, is een gemiste kans voor verbetering en kan leiden tot onvoorspelbare gedragingen in je applicatie. Door fouten naar de console te loggen (`console.log`) en er vervolgens niets mee te doen, mis je de kans om je applicatie te verbeteren en de gebruikerservaring te optimaliseren. Het is cruciaal om een strategie te hebben voor het geval er fouten optreden, zodat je gepast kunt reageren.
 
 **Onjuist:**
 
@@ -1855,8 +1912,7 @@ try {
 
 ### Negeer mislukte promises niet
 
-Om dezelfde reden als hierboven beschreven, negeer je ook de fouten van
-een `try/catch` niet.
+Promises zijn ontworpen om het werken met asynchrone operaties te vereenvoudigen, maar ze introduceren ook nieuwe uitdagingen, vooral rond foutafhandeling. Wanneer een Promise wordt afgewezen, betekent dit dat de verwachte asynchrone operatie is mislukt. Het correct afhandelen van deze afwijzingen is cruciaal voor het behouden van de stabiliteit van je applicatie en het bieden van een goede gebruikerservaring.
 
 **Onjuist:**
 
@@ -1898,7 +1954,7 @@ Voor zaken die niet automatisch worden opgemaakt (inspringing, tabs vs. spaties,
 
 ### Gebruik hoofdletters consistent
 
-JavaScript is ongetypeerd, dus hoofdletters vertellen veel over je variabelen, functies, enzovoort. Deze regels zijn een kwestie van smaak, dus je team kan kiezen wat ze willen. Het belangrijkste is dat je consistent bent.
+Hoofdletters zijn in een ongetypeerde taal als JavaScript van cruciaal belang om intentie en soort variabele aan te duiden. Het consistent gebruik van hoofdletters voor constanten, camelCase voor functies en variabelen, en PascalCase voor klassenamen helpt bij het snel identificeren van de soorten en doeleinden van verschillende elementen in je code Deze regels zijn een kwestie van smaak, dus je team kan kiezen wat ze willen. Het belangrijkste is dat je consistent bent.
 
 **Onjuist:**
 
@@ -1936,7 +1992,7 @@ class Alpaca {}
 
 ### Houd functies en aanroepen dicht bij elkaar
 
-Als een functie een andere aanroept, houd die functies dan verticaal dicht bij elkaar in het bronbestand. Idealiter staat de aanroeper direct boven de aangeroepene. We hebben de neiging om code van boven naar beneden te lezen, zoals een krant. Daarom moet je ervoor zorgen dat je code op die manier leesbaar is.
+Door functies en hun aanroepen dicht bij elkaar te houden, maak je het voor anderen (en voor jezelf in de toekomst) veel makkelijker om te begrijpen hoe de verschillende delen van je applicatie met elkaar samenwerken. Dit is vooral nuttig in grotere projecten, waar het navigeren door de code complex kan worden. Mensen hebben de neiging om code van boven naar beneden te lezen, zoals een krant. Daarom moet je ervoor zorgen dat je code op die manier leesbaar is.
 
 **Onjuist:**
 
@@ -2059,7 +2115,7 @@ function hashIt(data) {
     const char = data.charCodeAt(i);
     hash = (hash << 5) - hash + char;
 
-    // Converteer naar een 32-bit integer
+    // Converteer naar een 32-bit integer om overloop te voorkomen
     hash &= hash;
   }
 }
@@ -2090,7 +2146,7 @@ doStuff();
 
 ### Vermijd dagboekachtige opmerkingen
 
-Onthoud, gebruik versiebeheer! Er is geen noodzaak voor dode code, uitgecommentarieerde code, en vooral dagboekachtige opmerkingen. Gebruik `git log` om de geschiedenis te bekijken!
+Onthoud, gebruik versiebeheer! Er is geen noodzaak voor dode code, uitgecommentarieerde code, en vooral dagboekachtige opmerkingen. Schrijf duidelijke en beschrijvende commitberichten die de aard van de wijziging en de reden erachter uitleggen. Dit is waardevolle documentatie voor het team en voor toekomstige jij. Gebruik `git log` om de geschiedenis te bekijken!
 
 **Onjuist:**
 
@@ -2118,7 +2174,7 @@ function combine(a, b) {
 
 ### Vermijd positionele markers
 
-Ze voegen meestal alleen maar ruis toe. Laat de functie- en variabelennamen, samen met de juiste inspringing en opmaak, de visuele structuur van je code bepalen.
+Positionele markers zijn de horizontale regels of groepen van commentaartekens die bedoeld zijn om verschillende secties van de code visueel te scheiden. Hoewel ze in theorie kunnen helpen bij het organiseren van de code, leiden ze vaak tot meer visuele ruis en kunnen ze de aandacht afleiden van de eigenlijke code. Laat de functie- en variabelennamen, samen met de juiste inspringing en opmaak, de visuele structuur van je code bepalen.
 
 **Onjuist:**
 
